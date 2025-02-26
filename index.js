@@ -228,53 +228,68 @@ class CryptoAlgorithms {
 	// Double Transposition Cipher //
 
 
-	// Vigenere Cipher //
+	// Vigenère Cipher //
 	vigenere_encrypt(text, key) {
-		let keyIndex = 0;
-		return text.split('').map(char => {
-			if (this.arr_lower.includes(char)) {
-				const result = this.vigenereTable[this.arr_lower.indexOf(char)][this.arr_lower.indexOf(key[keyIndex])];
-				keyIndex = (keyIndex + 1) % key.length;
-				return result;
-			} else if (this.arr_upper.includes(char)) {
-				const result = this.vigenereTable[this.arr_upper.indexOf(char)][this.arr_lower.indexOf(key[keyIndex])];
-				keyIndex = (keyIndex + 1) % key.length;
-				return result;
+		key = key.toUpperCase();
+		let result = '';
+		let j = 0; // key index counter
+
+		for (let i = 0; i < text.length; i++) {
+			let char = text[i];
+			if (/[A-Za-z]/.test(char)) {
+				let isUpper = (char === char.toUpperCase());
+				let base = isUpper ? 65 : 97;
+				let textIndex = char.charCodeAt(0) - base;
+				let keyIndex = key[j % key.length].charCodeAt(0) - 65;
+				let cipherIndex = (textIndex + keyIndex) % 26;
+				result += String.fromCharCode(cipherIndex + base);
+				j++;
+			} else {
+				result += char;
 			}
-			return char;
-		}).join('');
+		}
+		return result;
 	}
 
 	vigenere_decrypt(text, key) {
-		let keyIndex = 0;
-		return text.split('').map(char => {
-			if (this.arr_lower.includes(char)) {
-				const result = this.vigenereTable[this.arr_lower.indexOf(key[keyIndex])].indexOf(char);
-				keyIndex = (keyIndex + 1) % key.length;
-				return this.arr_lower[result];
-			} else if (this.arr_upper.includes(char)) {
-				const result = this.vigenereTable[this.arr_lower.indexOf(key[keyIndex])].indexOf(char);
-				keyIndex = (keyIndex + 1) % key.length;
-				return this.arr_upper[result];
+		key = key.toUpperCase();
+		let result = '';
+		let j = 0; // key index counter
+
+		for (let i = 0; i < text.length; i++) {
+			let char = text[i];
+			if (/[A-Za-z]/.test(char)) {
+				let isUpper = (char === char.toUpperCase());
+				let base = isUpper ? 65 : 97;
+				let textIndex = char.charCodeAt(0) - base;
+				let keyIndex = key[j % key.length].charCodeAt(0) - 65;
+				let plainIndex = (textIndex - keyIndex + 26) % 26;
+				result += String.fromCharCode(plainIndex + base);
+				j++;
+			} else {
+				result += char;
 			}
-			return char;
-		}).join('');
+		}
+		return result;
 	}
 
 	async vigenere(text, operation) {
 		const { key } = await inquirer.prompt({
 			type: 'input',
 			name: 'key',
-			message: 'Enter key:'
+			message: 'Enter key (alphabetic characters only):'
 		});
 
 		if (operation === 'encrypt') {
 			return this.vigenere_encrypt(text, key);
 		} else if (operation === 'decrypt') {
 			return this.vigenere_decrypt(text, key);
+		} else {
+			throw new Error("Invalid operation. Use 'encrypt' or 'decrypt'.");
 		}
 	}
-	// Vigenere Cipher //
+	// Vigenère Cipher //
+
 }
 
 async function showMainMenu() {
