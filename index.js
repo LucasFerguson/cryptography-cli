@@ -79,11 +79,10 @@ class CryptoAlgorithms {
 		const textArr = text.split('');
 		let result = '';
 
-		// Process each block
 		for (let i = 0; i < textArr.length; i += blockSize) {
 			let block = textArr.slice(i, i + blockSize);
 
-			// Pad the block if it's shorter than the block size
+			// Pad the block
 			while (block.length < blockSize) {
 				block.push(' ');
 			}
@@ -105,7 +104,6 @@ class CryptoAlgorithms {
 		const textArr = text.split('');
 		let result = '';
 
-		// Process each block
 		for (let i = 0; i < textArr.length; i += blockSize) {
 			let block = textArr.slice(i, i + blockSize);
 
