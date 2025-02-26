@@ -2,36 +2,21 @@ import chalk from 'chalk';
 import figlet from 'figlet';
 import crypto from 'crypto';
 import inquirer from 'inquirer';
-import { console } from 'inspector';
-
-// import fs from 'fs/promises';
-// import path from 'path';
-// import { exec } from 'child_process';
-// import { createRequire } from 'module';
-// const require = createRequire(import.meta.url);
 
 class CryptoAlgorithms {
-	// Algorithms
-	// - Substitution Cipher
-	// 	- Shift Cipher
-	//  	- Assuming just for 26 characters in the alphabet
-	// 	- Permutation Cipher
-	// - Transposition Cipher
-	// 	- Simple Transposition
-	// 	- Double Transposition
-	// - Vigenere Cipher
-
-
-	arr_lower = 'abcdefghijklmnopqrstuvwxyz'.split('');
-	arr_upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+	constructor() {
+		// Define lowercase and uppercase alphabet arrays
+		this.arr_lower = 'abcdefghijklmnopqrstuvwxyz'.split('');
+		this.arr_upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+	}
 
 	shift_encrypt(text, shift) {
 		shift = shift % 26;
 		return text.split('').map(char => {
-			if (arr_lower.includes(char)) {
-				return arr_lower[(arr_lower.indexOf(char) + shift) % 26];
-			} else if (arr_upper.includes(char)) {
-				return arr_upper[(arr_upper.indexOf(char) + shift) % 26];
+			if (this.arr_lower.includes(char)) {
+				return this.arr_lower[(this.arr_lower.indexOf(char) + shift) % 26];
+			} else if (this.arr_upper.includes(char)) {
+				return this.arr_upper[(this.arr_upper.indexOf(char) + shift) % 26];
 			}
 			return char;
 		}).join('');
@@ -40,10 +25,10 @@ class CryptoAlgorithms {
 	shift_decrypt(text, shift) {
 		shift = shift % 26;
 		return text.split('').map(char => {
-			if (arr_lower.includes(char)) {
-				return arr_lower[(arr_lower.indexOf(char) - shift + 26) % 26];
-			} else if (arr_upper.includes(char)) {
-				return arr_upper[(arr_upper.indexOf(char) - shift + 26) % 26];
+			if (this.arr_lower.includes(char)) {
+				return this.arr_lower[(this.arr_lower.indexOf(char) - shift + 26) % 26];
+			} else if (this.arr_upper.includes(char)) {
+				return this.arr_upper[(this.arr_upper.indexOf(char) - shift + 26) % 26];
 			}
 			return char;
 		}).join('');
@@ -57,9 +42,9 @@ class CryptoAlgorithms {
 		});
 
 		if (operation === 'encrypt') {
-			return shift_encrypt(text, shift);
+			return this.shift_encrypt(text, shift);
 		} else if (operation === 'decrypt') {
-			return shift_decrypt(text, shift);
+			return this.shift_decrypt(text, shift);
 		}
 	}
 
@@ -81,7 +66,7 @@ class CryptoAlgorithms {
 
 	static oneTimePad(text, key, operation) {
 		if (text.length !== key.length) {
-			throw new Error('Text and key must be same length');
+			throw new Error('Text and key must be the same length');
 		}
 		return text.split('').map((char, i) => {
 			return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i));
@@ -89,16 +74,15 @@ class CryptoAlgorithms {
 	}
 
 	static des(text, key, operation) {
-		const cipher = crypto.createCipheriv('des-ecb', key.slice(0, 8), null);
-		const decipher = crypto.createDecipheriv('des-ecb', key.slice(0, 8), null);
+		const cipher = crypto.createCipheriv('des-ecb', Buffer.from(key.slice(0, 8)), null);
+		const decipher = crypto.createDecipheriv('des-ecb', Buffer.from(key.slice(0, 8)), null);
 
 		if (operation === 'encrypt') {
-			return Buffer.concat([cipher.update(text), cipher.final()]).toString('hex');
+			return Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]).toString('hex');
 		}
 		return Buffer.concat([decipher.update(Buffer.from(text, 'hex')), decipher.final()]).toString();
 	}
 }
-
 
 // ================= USER INTERFACE =================
 async function showMainMenu() {
@@ -113,7 +97,7 @@ async function showMainMenu() {
 		choices: ['encrypt', 'decrypt', 'exit']
 	});
 
-	// if (operation === 'exit') process.exit(0);
+	if (operation === 'exit') process.exit(0);
 
 	const { algorithm } = await inquirer.prompt({
 		type: 'list',
@@ -122,48 +106,61 @@ async function showMainMenu() {
 		choices: ['shift', 'vigenere', 'oneTimePad', 'des']
 	});
 
-	// print select algorithm
-	await console.log(chalk.yellow('\nAlgorithm:'), algorithm);
-	// print select operation
-	await console.log(chalk.yellow('Operation:'), operation);
-	// print text
-	await console.log(chalk.yellow('Text:'), text);
-
-
-	let result_print;
-
 	const { text } = await inquirer.prompt({
 		type: 'input',
 		name: 'text',
-		message: 'Enter text to ' + operation + ':'
+		message: `Enter text to ${operation}:`
 	});
-	// print select algorithm
+
 	console.log(chalk.yellow('\nAlgorithm:'), algorithm);
-	// print select operation
 	console.log(chalk.yellow('Operation:'), operation);
-	// print text
 	console.log(chalk.yellow('Text:'), text);
 
+	let result;
+	const cryptoInstance = new CryptoAlgorithms();
 
 	switch (algorithm) {
 		case 'shift':
 			console.log(chalk.yellow('\nShift Cipher'));
-			// result_print = await CryptoAlgorithms.shift(text, operation);
+			result = await cryptoInstance.shift(text, operation);
 			break;
-		// case 'vigenere':
-		// 	result_print = await CryptoAlgorithms.vigenere(text, key, operation.toLowerCase());
-		// 	break;
-		// case 'oneTimePad':
-		// 	result_print = await CryptoAlgorithms.oneTimePad(text, key, operation.toLowerCase());
-		// 	break;
-		// case 'des':
-		// 	result_print = await CryptoAlgorithms.des(text, key, operation.toLowerCase());
-		// 	break;
+		case 'vigenere':
+			const { key: vigKey } = await inquirer.prompt({
+				type: 'input',
+				name: 'key',
+				message: 'Enter key for Vigenere Cipher:'
+			});
+			result = CryptoAlgorithms.vigenere(text, vigKey, operation);
+			break;
+		case 'oneTimePad':
+			const { key: otpKey } = await inquirer.prompt({
+				type: 'input',
+				name: 'key',
+				message: 'Enter key (must be same length as text) for One-Time Pad:'
+			});
+			if (otpKey.length !== text.length) {
+				console.log(chalk.red('Key length must match text length.'));
+				return showMainMenu();
+			}
+			result = CryptoAlgorithms.oneTimePad(text, otpKey, operation);
+			break;
+		case 'des':
+			const { key: desKey } = await inquirer.prompt({
+				type: 'input',
+				name: 'key',
+				message: 'Enter 8-character key for DES:'
+			});
+			if (desKey.length < 8) {
+				console.log(chalk.red('DES key must be at least 8 characters long.'));
+				return showMainMenu();
+			}
+			result = CryptoAlgorithms.des(text, desKey, operation);
+			break;
 		default:
 			throw new Error('Algorithm not implemented');
 	}
 
-	console.log(chalk.yellow('\nResult:'), result_print);
+	console.log(chalk.yellow('\nResult:'), result);
 	await showMainMenu();
 }
 
