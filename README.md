@@ -4,7 +4,7 @@
 
 The program encrypts and decrypts text using a many ciphers. Users specify an alg to rearrange characters.
 
-Algorithms
+Part 1 Algorithms
 - Substitution Cipher
   - Shift Cipher
   - Assuming just for 26 characters in the alphabet
@@ -14,6 +14,18 @@ Algorithms
   - Double Transposition
 - Vigenere Cipher
 
+Part 2 Algorithms
+- AES
+- DES
+- 3DES
+
+
+With modes:
+- ECB - Electronic Codebook
+- CBC - Cipher Block Chaining
+- CFB - Cipher Feedback
+- OFB - Output Feedback
+  
 **2. Usage Instructions**
 
 - **Setup:**
@@ -28,6 +40,10 @@ Algorithms
 
 - **Input Validation:** Ensuring the permutation key matches the block size and contains unique numbers is crucial.
 - **Padding:** Padding text is important, I choose space " " as my padding character.
+
+Part 2 Observations
+- Due to **DES** being an old and insecure algorithm I needed to add this environment flag to allow it to run: `process.env.NODE_OPTIONS = '--openssl-legacy-provider';
+`
 
 **4. Directory Structure**
 - `Assignment 2 CS 458.md>` contains answers to Task 1 and Task 2.
