@@ -5,6 +5,7 @@ import inquirer from 'inquirer';
 
 class CryptoAlgorithms {
 
+	// Part 1
 	// Algorithms
 	// - Substitution Cipher
 	// 	- Shift Cipher
@@ -14,6 +15,11 @@ class CryptoAlgorithms {
 	// 	- Simple Transposition
 	// 	- Double Transposition
 	// - Vigenere Cipher
+
+	// Part 2
+	// Algorithms
+	// - AES-128 - Advanced Encryption Standard with a 128-bit key length
+
 
 	constructor() {
 		// Define lowercase and uppercase alphabet arrays
@@ -288,6 +294,83 @@ class CryptoAlgorithms {
 	}
 	// Vigenère Cipher //
 
+
+	// AES-128 //
+	aes_encrypt(text, key, mode, iv) {
+		const cipher = crypto.createCipheriv(`aes-128-${mode}`, key, iv);
+		cipher.setAutoPadding(true);
+		let encrypted = cipher.update(text, 'utf8', 'base64');
+		encrypted += cipher.final('base64');
+		return encrypted;
+	}
+
+	aes_decrypt(text, key, mode, iv) {
+		const decipher = crypto.createDecipheriv(`aes-128-${mode}`, key, iv);
+		decipher.setAutoPadding(true);
+		let decrypted = decipher.update(text, 'base64', 'utf8');
+		decrypted += decipher.final('utf8');
+		return decrypted;
+	}
+
+	async aes(text, operation) {
+		const { mode } = await inquirer.prompt({
+			type: 'list',
+			name: 'mode',
+			message: 'Select AES mode:',
+			choices: [
+				{ name: 'ECB - Electronic Codebook (Basic)', value: 'ecb' },
+				{ name: 'CBC - Cipher Block Chaining (Recommended)', value: 'cbc' },
+				{ name: 'CFB - Cipher Feedback', value: 'cfb' },
+				{ name: 'OFB - Output Feedback', value: 'ofb' }
+			]
+		});
+
+		const { key } = await inquirer.prompt({
+			type: 'input',
+			name: 'key',
+			message: 'Enter key (16 characters):',
+			validate: value => value.length === 16 ? true : 'Key must be exactly 16 characters long.',
+			default: '1234567890123456'
+		});
+
+		if (operation === 'encrypt') {
+
+			if (mode === 'ecb') {
+				return this.aes_encrypt(text, key, mode, null);
+			}
+
+			let iv = crypto.randomBytes(16);
+
+			if (mode === 'cbc' || mode === 'cfb' || mode === 'ofb') {
+				return "Random IV = " + iv.toString('hex') + '   Cipher Text = ' + this.aes_encrypt(text, key, mode, iv);
+			}
+
+		} else if (operation === 'decrypt') {
+
+			if (mode === 'ecb') {
+				return this.aes_decrypt(text, key, mode, null);
+			}
+
+			// prompt for IV if not ECB mode
+			const { ivHex } = await inquirer.prompt({
+				type: 'input',
+				name: 'ivHex',
+				message: 'Enter IV (hexadecimal string):'
+			});
+
+			let iv = Buffer.from(ivHex, 'hex');
+
+			if (mode === 'cbc' || mode === 'cfb' || mode === 'ofb') {
+				return this.aes_decrypt(text, key, mode, iv);
+			}
+
+		} else {
+			throw new Error("Invalid operation. Use 'encrypt' or 'decrypt'.");
+		}
+
+	}
+	// AES-128 //
+
 }
 
 async function showMainMenu() {
@@ -311,7 +394,7 @@ async function showMainMenu() {
 		type: 'list',
 		name: 'algorithm',
 		message: 'Select algorithm:',
-		choices: ['Shift', 'Permutation', 'Simple Transposition', 'Double Transposition', 'Vigenere']
+		choices: ['Shift', 'Permutation', 'Simple Transposition', 'Double Transposition', 'Vigenere', 'AES-128']
 	});
 
 	const { text } = await inquirer.prompt({
@@ -348,6 +431,10 @@ async function showMainMenu() {
 		case 'Vigenere':
 			// console.log(chalk.yellow('\nVigenere Cipher'));
 			result = await cryptoInstance.vigenere(text, operation);
+			break;
+		case 'AES-128':
+			// console.log(chalk.yellow('\nAES-128'));
+			result = await cryptoInstance.aes(text, operation);
 			break;
 		default:
 			throw new Error('Algorithm not implemented');
