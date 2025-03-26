@@ -45,5 +45,14 @@ Algorithms
 **Permutation Demo**
 ![alt text](image-2.png)
 
+**AES Demo**
+CBC - Cipher Block Chaining
+![alt text](image-4.png)
 
+**DES Demo**
+CBC - Cipher Block Chaining
+![alt text](image-3.png)
 
+**3DES Demo**
+CFB - Cipher Feedback
+![alt text](image-5.png)
