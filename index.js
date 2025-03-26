@@ -380,8 +380,8 @@ class CryptoAlgorithms {
 		let cipher;
 		if (mode === 'ecb') {
 			cipher = crypto.createCipheriv('des-ecb', key, null);
-		} else if (mode === 'cbc') {
-			cipher = crypto.createCipheriv('des-cbc', key, iv);
+		} else if (mode === 'cbc' || mode === 'cfb' || mode === 'ofb') {
+			cipher = crypto.createCipheriv(`des-${mode}`, key, iv);
 		}
 		cipher.setAutoPadding(true);
 		let encrypted = cipher.update(text, 'utf8', 'base64');
@@ -404,7 +404,9 @@ class CryptoAlgorithms {
 			message: 'Select DES mode:',
 			choices: [
 				{ name: 'ECB - Electronic Codebook', value: 'ecb' },
-				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' }
+				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' },
+				{ name: 'CFB - Cipher Feedback', value: 'cfb' },
+				{ name: 'OFB - Output Feedback', value: 'ofb' }
 			]
 		});
 
@@ -471,7 +473,9 @@ class CryptoAlgorithms {
 			message: 'Select DES mode:',
 			choices: [
 				{ name: 'ECB - Electronic Codebook', value: 'ecb' },
-				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' }
+				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' },
+				{ name: 'CFB - Cipher Feedback', value: 'cfb' },
+				{ name: 'OFB - Output Feedback', value: 'ofb' }
 			]
 		});
 
