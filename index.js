@@ -3,6 +3,9 @@ import figlet from 'figlet';
 import crypto from 'crypto';
 import inquirer from 'inquirer';
 
+// Fix for Node.js v17+ to run DES and 3DES algorithms
+process.env.NODE_OPTIONS = '--openssl-legacy-provider';
+
 class CryptoAlgorithms {
 
 	// Part 1
@@ -19,7 +22,8 @@ class CryptoAlgorithms {
 	// Part 2
 	// Algorithms
 	// - AES-128 - Advanced Encryption Standard with a 128-bit key length
-
+	// - DES - Data Encryption Standard
+	// - 3DES - Triple DES
 
 	constructor() {
 		// Define lowercase and uppercase alphabet arrays
@@ -371,6 +375,157 @@ class CryptoAlgorithms {
 	}
 	// AES-128 //
 
+	// DES //
+	des_encrypt(text, key, mode, iv) {
+		let cipher;
+		if (mode === 'ecb') {
+			cipher = crypto.createCipheriv('des-ecb', key, null);
+		} else if (mode === 'cbc') {
+			cipher = crypto.createCipheriv('des-cbc', key, iv);
+		}
+		cipher.setAutoPadding(true);
+		let encrypted = cipher.update(text, 'utf8', 'base64');
+		encrypted += cipher.final('base64');
+		return encrypted;
+	}
+
+	des_decrypt(text, key, mode, iv) {
+		const decipher = crypto.createDecipheriv(`des-${mode}`, key, iv);
+		decipher.setAutoPadding(true);
+		let decrypted = decipher.update(text, 'base64', 'utf8');
+		decrypted += decipher.final('utf8');
+		return decrypted;
+	}
+
+	async des(text, operation) {
+		const { mode } = await inquirer.prompt({
+			type: 'list',
+			name: 'mode',
+			message: 'Select DES mode:',
+			choices: [
+				{ name: 'ECB - Electronic Codebook', value: 'ecb' },
+				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' }
+			]
+		});
+
+		console.log("Note: If you receive an error, please run the following command in your terminal: 'set NODE_OPTIONS=--openssl-legacy-provider' to enable DES and 3DES");
+
+		const { key } = await inquirer.prompt({
+			type: 'input',
+			name: 'key',
+			message: 'Enter key (8 characters):',
+			validate: value => value.length === 8 ? true : 'Key must be exactly 8 characters long.',
+			default: '12345678'
+		});
+
+		if (operation === 'encrypt') {
+			if (mode === 'ecb') {
+				return this.des_encrypt(text, key, mode, null);
+			}
+			let iv = crypto.randomBytes(8);
+			return "Random IV = " + iv.toString('hex') + '   Cipher Text = ' + this.des_encrypt(text, key, mode, iv);
+		} else if (operation === 'decrypt') {
+			if (mode === 'ecb') {
+				return this.des_decrypt(text, key, mode, null);
+			}
+			const { ivHex } = await inquirer.prompt({
+				type: 'input',
+				name: 'ivHex',
+				message: 'Enter IV (hexadecimal string):'
+			});
+			let iv = Buffer.from(ivHex, 'hex');
+			return this.des_decrypt(text, key, mode, iv);
+		}
+	}
+	// DES //
+
+	// 3DES //
+	tripleDes_encrypt(text, key1, key2, key3, mode, iv) {
+		const bufKey1 = Buffer.from(key1, 'utf8');
+		const bufKey2 = Buffer.from(key2, 'utf8');
+		const bufKey3 = Buffer.from(key3, 'utf8');
+		const cipher = crypto.createCipheriv(`des-ede3-${mode}`, Buffer.concat([bufKey1, bufKey2, bufKey3]), iv);
+		cipher.setAutoPadding(true);
+		let encrypted = cipher.update(text, 'utf8', 'base64');
+		encrypted += cipher.final('base64');
+		return encrypted;
+	}
+
+	tripleDes_decrypt(text, key1, key2, key3, mode, iv) {
+		const bufKey1 = Buffer.from(key1, 'utf8');
+		const bufKey2 = Buffer.from(key2, 'utf8');
+		const bufKey3 = Buffer.from(key3, 'utf8');
+		const decipher = crypto.createDecipheriv(`des-ede3-${mode}`, Buffer.concat([bufKey1, bufKey2, bufKey3]), iv);
+		decipher.setAutoPadding(true);
+		let decrypted = decipher.update(text, 'base64', 'utf8');
+		decrypted += decipher.final('utf8');
+		return decrypted;
+	}
+
+	async tripleDes(text, operation) {
+		console.log("Note: If you receive an error, please run the following command in your terminal: 'set NODE_OPTIONS=--openssl-legacy-provider' to enable DES and 3DES");
+
+		const { mode } = await inquirer.prompt({
+			type: 'list',
+			name: 'mode',
+			message: 'Select DES mode:',
+			choices: [
+				{ name: 'ECB - Electronic Codebook', value: 'ecb' },
+				{ name: 'CBC - Cipher Block Chaining', value: 'cbc' }
+			]
+		});
+
+		const { key1 } = await inquirer.prompt({
+			type: 'input',
+			name: 'key1',
+			message: 'Enter key 1 (8 characters):',
+			validate: value => value.length === 8 ? true : 'Key must be exactly 8 characters long.',
+			default: '12345678'
+		});
+
+		const { key2 } = await inquirer.prompt({
+			type: 'input',
+			name: 'key2',
+			message: 'Enter key 2 (8 characters):',
+			validate: value => value.length === 8 ? true : 'Key must be exactly 8 characters long.',
+			default: '12345678'
+		});
+
+		const { key3 } = await inquirer.prompt({
+			type: 'input',
+			name: 'key3',
+			message: 'Enter key 3 (8 characters):',
+			validate: value => value.length === 8 ? true : 'Key must be exactly 8 characters long.',
+			default: '12345678'
+		});
+
+		if (operation === 'encrypt') {
+
+			if (mode === 'ecb') {
+				return this.tripleDes_encrypt(text, key1, key2, key3, mode, null);
+			}
+
+			let iv = crypto.randomBytes(8);
+			return "Random IV = " + iv.toString('hex') + '   Cipher Text = ' + this.tripleDes_encrypt(text, key1, key2, key3, mode, iv);
+		} else if (operation === 'decrypt') {
+
+			if (mode === 'ecb') {
+				return this.tripleDes_decrypt(text, key1, key2, key3, mode, null);
+			}
+
+			const { ivHex } = await inquirer.prompt({
+				type: 'input',
+				name: 'ivHex',
+				message: 'Enter IV (hexadecimal string):'
+			});
+			let iv = Buffer.from(ivHex, 'hex');
+			return this.tripleDes_decrypt(text, key1, key2, key3, mode, iv);
+		}
+	}
+	// 3DES //
+
+
+
 }
 
 async function showMainMenu() {
@@ -394,7 +549,7 @@ async function showMainMenu() {
 		type: 'list',
 		name: 'algorithm',
 		message: 'Select algorithm:',
-		choices: ['Shift', 'Permutation', 'Simple Transposition', 'Double Transposition', 'Vigenere', 'AES-128']
+		choices: ['Shift', 'Permutation', 'Simple Transposition', 'Double Transposition', 'Vigenere', 'AES-128', 'DES', '3DES']
 	});
 
 	const { text } = await inquirer.prompt({
@@ -435,6 +590,15 @@ async function showMainMenu() {
 		case 'AES-128':
 			// console.log(chalk.yellow('\nAES-128'));
 			result = await cryptoInstance.aes(text, operation);
+			break;
+		case 'DES':
+			// console.log(chalk.yellow('\nDES'));
+			result = await cryptoInstance.des(text, operation);
+
+			break;
+		case '3DES':
+			// console.log(chalk.yellow('\n3DES'));
+			result = await cryptoInstance.tripleDes(text, operation);
 			break;
 		default:
 			throw new Error('Algorithm not implemented');
